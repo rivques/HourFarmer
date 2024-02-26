@@ -3,7 +3,7 @@ Completeing a training pack: need to find event
 Pack quadrants: not yet started
 Freeplay time: done
 Weekday modifiers: not yet started
-Replay time: need to test if isInReplay is game replay or goal replay
+Replay time: done
 
 Restricted ranked queuing: Need to start, use MatchmakingWrapper for handling stuff
 Coach session, workshop map, queue with pro: Will need to have CBell do manunally

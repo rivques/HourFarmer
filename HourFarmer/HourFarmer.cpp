@@ -30,6 +30,25 @@ void HourFarmer::onLoad()
 		AGameEvent_TrainingEditor_TA_GetScore_Params* scoreParams = reinterpret_cast<AGameEvent_TrainingEditor_TA_GetScore_Params*>(params);
 		DEBUGLOG("Training completed with score " + std::to_string(scoreParams->ReturnValue));
 		});
+	// hook trying to queue
+	gameWrapper->HookEvent("Function TAGame.GFxData_Matchmaking_TA.StartMatchmaking", [this](...) {
+		if (queueingIsAllowed) {
+			DEBUGLOG("Queueing is allowed, continuing");
+		}
+		else {
+			gameWrapper->SetTimeout([this](GameWrapper* gw) {
+				gameWrapper->Execute([this](GameWrapper* gw) {
+					gameWrapper->GetMatchmakingWrapper().CancelMatchmaking();
+					ModalWrapper alertModal = gameWrapper->CreateModal("Queueing not allowed");
+					alertModal.AddButton("OK", true);
+					alertModal.SetBody("Queueing with the main menu is disabled while using Hour Farmer. Please purchase a queue via the Hour Farmer menu.");
+					alertModal.ShowModal();
+					queueingIsAllowed = false;
+				});
+			}, 0.5);	
+		}
+
+		});
 }
 
 void HourFarmer::awardPoints(int numPoints, std::string reason, bool silent)
@@ -147,6 +166,14 @@ void HourFarmer::RenderSettings()
 		gameWrapper->SetTimeout([this](GameWrapper* gw) {
 			cvarManager->executeCommand("crash");
 		}, 10.0);
+	});
+	renderShopItem("Casual game", "Queues for a casual game", 50, [this]() {
+		queueingIsAllowed = true;
+		gameWrapper->Execute([this](GameWrapper* gw) {
+			MatchmakingWrapper matchmaker = gameWrapper->GetMatchmakingWrapper();
+			matchmaker.SetPlaylistSelection(Playlist::CASUAL_DOUBLES, 1);
+			matchmaker.StartMatchmaking(PlaylistCategory::CASUAL);
+		});
 	});
 
 

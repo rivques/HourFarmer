@@ -33,6 +33,9 @@ class HourFarmer: public BakkesMod::Plugin::BakkesModPlugin
 	void renderShopItem(std::string name, std::string description, int cost, std::function<void()> purchaseAction);
 
 
+	// state for queuing
+	bool queueingIsAllowed = false;
+
 	// here's some vars for the GUI
 	bool is_showing_overlay = true;
 	bool is_dragging_overlay = false;
