@@ -328,6 +328,8 @@ void HourFarmer::RenderSettings()
 {	
 	ImGui::TextUnformatted("Welcome to the Hour Farmer shop!");
 	ImGui::TextUnformatted("Here you can spend your hard-earned points on various items and upgrades.");
+	ImGui::Separator();
+	ImGui::TextUnformatted("Casual Queues");
 
 	CVarWrapper cduels_num_used_today_cvar = cvarManager->getCvar("hf_num_used_today_casual_duels");
 	if (!cduels_num_used_today_cvar) {
@@ -356,6 +358,8 @@ void HourFarmer::RenderSettings()
 			QueueForMatch(Playlist::CASUAL_STANDARD, PlaylistCategory::CASUAL);
 		});
 	}
+	ImGui::Separator();
+	ImGui::TextUnformatted("Competitive Queues");
 	renderShopItem("Competitive duels", "Queues you for competitive duels", 1000, [this]() {
 		QueueForMatch(Playlist::RANKED_DUELS, PlaylistCategory::RANKED);
 	});
@@ -365,6 +369,11 @@ void HourFarmer::RenderSettings()
 	renderShopItem("Competitive standard", "Queues you for competitive standard", 1000, [this]() {
 		QueueForMatch(Playlist::RANKED_STANDARD, PlaylistCategory::RANKED);
 	});
+	ImGui::Separator();
+	ImGui::TextUnformatted("Powerups");
+	renderShopItem("Coaching session", "30 mins of coaching", 5000, [this]() {});
+	renderShopItem("Workshop map", "Get a new workshop map", 5000, [this]() {});
+	renderShopItem("Queue with pro", "Add a pro to your party for a queue", 7500, [this]() {});
 
 	if (ImGui::CollapsingHeader("Settings", ImGuiTreeNodeFlags_None)) {
 		ImGui::Checkbox("Make overlay draggable", &is_dragging_overlay);
