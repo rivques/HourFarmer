@@ -29,12 +29,19 @@ class HourFarmer: public BakkesMod::Plugin::BakkesModPlugin
 	void awardPoints(int numPoints, std::string reason, bool silent);
 	void timeBasedPointAward();
 	float calculateTimeToWait();
+	void dailyLimitsResetCheck();
+	void ResetDailyLimits();
+	void onMatchEnded(ServerWrapper server);
 
 	void renderShopItem(std::string name, std::string description, int cost, std::function<void()> purchaseAction);
-
+	void renderLimitedPerDayItem(std::string name, std::string description, int maxPurchasesPerDay, CVarWrapper numUsedTodayCvar, std::function<void()> purchaseAction);
+	void QueueForMatch(Playlist playlist, PlaylistCategory playlistCategory);
 
 	// state for queuing
 	bool queueingIsAllowed = false;
+	bool gamePlayedWasCompetitive = false;
+	// state for winstreak
+	bool didJustWin = false;
 
 	// here's some vars for the GUI
 	bool is_showing_overlay = true;

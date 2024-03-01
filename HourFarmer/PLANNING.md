@@ -2,13 +2,13 @@ Points over time: done
 Completeing a training pack: need to find event
 Pack quadrants: not yet started
 Freeplay time: done
-Weekday modifiers: not yet started
+Weekday modifier not yet started
 Replay time: done
 
-Restricted ranked queuing: Need to start, use MatchmakingWrapper for handling stuff
-Coach session, workshop map, queue with pro: Will need to have CBell do manunally
+Restricted ranked queuing: done, I think
+Coach session, workshop map, queue with pro: Will need to have CBell do manunally (still need to add buttons)
 
 Point reimbursement:
-Game wins: need to find event
-Win streaking: Need event and persistent cvar
+Game wins: Done, I think
+Win streaking: Done, I think
 Leavers: Need to find event
