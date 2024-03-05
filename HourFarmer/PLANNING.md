@@ -2,7 +2,7 @@ Points over time: done
 Completeing a training pack: need to find event
 Pack quadrants: not yet started
 Freeplay time: done
-Weekday modifier not yet started
+Weekday modifier: done
 Replay time: done
 
 Restricted ranked queuing: done, I think

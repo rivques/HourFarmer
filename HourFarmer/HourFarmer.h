@@ -14,6 +14,14 @@ struct AGameEvent_TrainingEditor_TA_GetScore_Params
 {
 	int                                                ReturnValue;                                              // (CPF_Parm, CPF_OutParm, CPF_ReturnParm)
 };
+struct StatTickerParams {
+	// person who got a stat
+	uintptr_t Receiver;
+	// person who is victim of a stat (only exists for demos afaik)
+	uintptr_t Victim;
+	// wrapper for the stat event
+	uintptr_t StatEvent;
+};
 
 class HourFarmer: public BakkesMod::Plugin::BakkesModPlugin
 	,public SettingsWindowBase // Uncomment if you wanna render your own tab in the settings menu
@@ -32,6 +40,8 @@ class HourFarmer: public BakkesMod::Plugin::BakkesModPlugin
 	void dailyLimitsResetCheck();
 	void ResetDailyLimits();
 	void onMatchEnded(ServerWrapper server);
+	void onStatTickerMessage(void* params);
+	void onGoalScored(BallWrapper ball);
 
 	void renderShopItem(std::string name, std::string description, int cost, std::function<void()> purchaseAction);
 	void renderLimitedPerDayItem(std::string name, std::string description, int maxPurchasesPerDay, CVarWrapper numUsedTodayCvar, std::function<void()> purchaseAction);
@@ -40,8 +50,12 @@ class HourFarmer: public BakkesMod::Plugin::BakkesModPlugin
 	// state for queuing
 	bool queueingIsAllowed = false;
 	bool gamePlayedWasCompetitive = false;
+	int queueingCancelRefund = 0;
+	int sessionStartPoints = 0;
 	// state for winstreak
 	bool didJustWin = false;
+	// state for goal detection
+	bool isInGoalReplay = false;
 
 	// here's some vars for the GUI
 	bool is_showing_overlay = true;

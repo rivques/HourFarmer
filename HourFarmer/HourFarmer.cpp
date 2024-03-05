@@ -21,6 +21,8 @@ void HourFarmer::onLoad()
 	CVarWrapper cstandard_num_used_today_cvar = persistent_storage->RegisterPersistentCvar("hf_num_used_today_casual_standard", "0", "How many times the player has used the casual standard queue today");
 	CVarWrapper last_reset_time_cvar = persistent_storage->RegisterPersistentCvar("hf_last_reset_time", "0", "The time at which the daily limits were last reset");
 	CVarWrapper win_streak_cvar = persistent_storage->RegisterPersistentCvar("hf_win_streak", "0", "The player's current win streak");
+	CVarWrapper points_goal_weekday_cvar = persistent_storage->RegisterPersistentCvar("hf_points_goal_weekday", "10", "How many points the player will accumulate every time they score a goal on a Wednesday");
+	CVarWrapper quadrant_size_cvar = persistent_storage->RegisterPersistentCvar("hf_quadrant_size", "0.2", "The size of the quadrants for goal accuracy awards");
 
 	// kick off the time-based point awarding
 	timeBasedPointAward();
@@ -32,6 +34,8 @@ void HourFarmer::onLoad()
 
 	// show the overlay, in 0.1 secs to give the game time to load
 	gameWrapper->SetTimeout([this](GameWrapper* gw) {
+		CVarWrapper points_cvar = cvarManager->getCvar("hf_points");
+		sessionStartPoints = points_cvar.getIntValue();
 		cvarManager->executeCommand("openmenu " + menuTitle_);
 	}, 0.1);
 
@@ -62,6 +66,16 @@ void HourFarmer::onLoad()
 	// if the queue is cancelled, disallow queueing again
 	gameWrapper->HookEvent("Function TAGame.GFxData_Matchmaking_TA.CancelSearch", [this](...) {
 		queueingIsAllowed = false;
+		CVarWrapper points_cvar = cvarManager->getCvar("hf_points");
+		if (!points_cvar) {
+			LOG("Points cvar not found!");
+			return;
+		}
+		points_cvar.setValue(points_cvar.getIntValue() + queueingCancelRefund);
+		if (queueingCancelRefund > 0) {
+			gameWrapper->Toast("Queue cancelled", "You've been refunded " + std::to_string(queueingCancelRefund) + " points for cancelling the queue", "default", 3.5, ToastType_OK);
+		}
+		queueingCancelRefund = 0;
 		});
 
 	gameWrapper->HookEventWithCallerPost<ServerWrapper>("Function TAGame.GameEvent_Soccar_TA.EventMatchEnded", [this](ServerWrapper caller, ...) {
@@ -82,6 +96,7 @@ void HourFarmer::onLoad()
 		gamePlayedWasCompetitive = false;
 		});
 	gameWrapper->HookEventPost("Function TAGame.Team_TA.PostBeginPlay", [this](...) {
+		queueingCancelRefund = 0;
 		// are we in a competitive match?
 		ServerWrapper sw = gameWrapper->GetCurrentGameState();
 		if (!sw) {
@@ -97,6 +112,51 @@ void HourFarmer::onLoad()
 		gamePlayedWasCompetitive = playlistID == 10 || playlistID == 11 || playlistID == 13;
 		DEBUGLOG("Joining a {} match!", gamePlayedWasCompetitive ? "competitive" : "non-competitive");
 		});
+
+
+	//  We need the params so we hook with caller, but there is no wrapper for the HUD
+	gameWrapper->HookEventWithCallerPost<ServerWrapper>("Function TAGame.GFxHUD_TA.HandleStatTickerMessage",
+		[this](ServerWrapper caller, void* params, std::string eventname) {
+			onStatTickerMessage(params);
+		});
+
+	gameWrapper->HookEvent("Function GameEvent_Soccar_TA.ReplayPlayback.BeginState", [this](...) {
+		isInGoalReplay = true;
+		});
+	gameWrapper->HookEvent("Function GameEvent_Soccar_TA.ReplayPlayback.EndState", [this](...) {
+		isInGoalReplay = false;
+		});
+
+	gameWrapper->HookEventWithCallerPost<BallWrapper>("Function TAGame.Ball_TA.OnHitGoal", [this](BallWrapper caller, void* params, std::string eventname) {
+		if (isInGoalReplay) {
+				return;
+			}
+		onGoalScored(caller);
+		});	
+}
+void HourFarmer::onStatTickerMessage(void* params) {
+	StatTickerParams* pStruct = (StatTickerParams*)params;
+	PriWrapper receiver = PriWrapper(pStruct->Receiver);
+	PriWrapper victim = PriWrapper(pStruct->Victim);
+	StatEventWrapper statEvent = StatEventWrapper(pStruct->StatEvent);
+	std::time_t t = std::time(nullptr);
+	std::tm* now = std::localtime(&t);
+	if (statEvent.GetEventName() == "Goal" && gameWrapper->IsInOnlineGame() && now->tm_wday == 3 && receiver.memory_address == gameWrapper->GetPlayerController().GetPRI().memory_address) {
+		CVarWrapper points_goal_weekday_cvar = cvarManager->getCvar("hf_points_goal_weekday");
+		if (!points_goal_weekday_cvar) {
+			LOG("Points goal weekday cvar not found!");
+			return;
+		}
+		awardPoints(points_goal_weekday_cvar.getIntValue(), "scoring a goal on Wednesday", false);
+	}
+}
+
+void HourFarmer::onGoalScored(BallWrapper ball)
+{
+	if (!gameWrapper->IsInCustomTraining()) {
+		return;
+	}
+	CVarWrapper quadrant_size_cvar = cvarManager->getCvar("hf_quadrant_size");
 }
 
 void HourFarmer::awardPoints(int numPoints, std::string reason, bool silent)
@@ -144,7 +204,7 @@ float HourFarmer::calculateTimeToWait()
 	GameSettingPlaylistWrapper playlist = sw.GetPlaylist();
 	if (!playlist) return 0;
 	int playlistID = playlist.GetPlaylistId(); // caution: playlistID is spoofed in replays
-
+	float result = 0;
 	DEBUGLOG("Determining time to wait for playlist {}", playlistID);
 
 	if (playlistID == 21 || playlistID == 24 || playlistID == 19) { // training/custom map
@@ -154,28 +214,29 @@ float HourFarmer::calculateTimeToWait()
 			return 0;
 		}
 
-		return 60.0 / points_per_min_cvar.getFloatValue();
-	}
-	
-	if (gameWrapper->IsInFreeplay()) {
+		result = 60.0 / points_per_min_cvar.getFloatValue();
+	} else if (gameWrapper->IsInFreeplay()) {
 		CVarWrapper points_per_min_freeplay_cvar = cvarManager->getCvar("hf_points_per_min_freeplay");
 		if (!points_per_min_freeplay_cvar) {
 			LOG("Points per min freeplay cvar not found!");
 			return 0;
 		
 		}
-		return 60.0 / points_per_min_freeplay_cvar.getFloatValue();
-	}
-	if (gameWrapper->IsInReplay()) {
+		result = 60.0 / points_per_min_freeplay_cvar.getFloatValue();
+	} else if (gameWrapper->IsInReplay()) {
 		CVarWrapper points_per_min_replay_cvar = cvarManager->getCvar("hf_points_per_min_replay");
 		if (!points_per_min_replay_cvar) {
 			LOG("Points per min replay cvar not found!");
 			return 0;
 		}
-		return 60.0 / points_per_min_replay_cvar.getFloatValue();
+		result = 60.0 / points_per_min_replay_cvar.getFloatValue();
 	}
-
-	return 0;
+	std::time_t t = std::time(nullptr);
+	std::tm* now = std::localtime(&t);
+	if (now->tm_wday == 6 || now->tm_wday == 0) {
+		result /= 2.0f; // double xp weekends
+	}
+	return result;
 }
 
 void HourFarmer::dailyLimitsResetCheck()
@@ -326,6 +387,7 @@ void HourFarmer::renderLimitedPerDayItem(std::string name, std::string descripti
 
 void HourFarmer::RenderSettings()
 {	
+	ImGui::SetWindowFontScale(2);
 	ImGui::TextUnformatted("Welcome to the Hour Farmer shop!");
 	ImGui::TextUnformatted("Here you can spend your hard-earned points on various items and upgrades.");
 
@@ -358,14 +420,17 @@ void HourFarmer::RenderSettings()
 	}
 	renderShopItem("Competitive duels", "Queues you for competitive duels", 1000, [this]() {
 		QueueForMatch(Playlist::RANKED_DUELS, PlaylistCategory::RANKED);
+		queueingCancelRefund = 1000;
 	});
 	renderShopItem("Competitive doubles", "Queues you for competitive doubles", 1000, [this]() {
 		QueueForMatch(Playlist::RANKED_DOUBLES, PlaylistCategory::RANKED);
+		queueingCancelRefund = 1000;
 	});
 	renderShopItem("Competitive standard", "Queues you for competitive standard", 1000, [this]() {
 		QueueForMatch(Playlist::RANKED_STANDARD, PlaylistCategory::RANKED);
+		queueingCancelRefund = 1000;
 	});
-
+	ImGui::SetWindowFontScale(1);
 	if (ImGui::CollapsingHeader("Settings", ImGuiTreeNodeFlags_None)) {
 		ImGui::Checkbox("Make overlay draggable", &is_dragging_overlay);
 
@@ -446,6 +511,18 @@ void HourFarmer::RenderSettings()
 				win_streak_cvar.setValue(win_streak + 1);
 			}
 		}
+
+		// change quadrant size (percent of goal)
+		CVarWrapper quadrant_size_cvar = cvarManager->getCvar("hf_quadrant_size");
+		if (!quadrant_size_cvar) {
+			LOG("Quadrant size cvar not found!");
+		}
+		else {
+			int quadrant_size = quadrant_size_cvar.getFloatValue()*100;
+			if (ImGui::SliderInt("Quadrant bomus target size", &quadrant_size, 0, 100, "%d%%")) {
+				quadrant_size_cvar.setValue(quadrant_size/100);
+			}
+		}
 	}
 }
 
@@ -473,9 +550,12 @@ void HourFarmer::RenderWindow()
 		return;
 	}
 
-	// Do your overlay rendering with full ImGui here!
+	int minPointsToPurchaseSomething = 1000;
+	ImGui::SetWindowFontScale(2.5);
 	ImGui::Text("Current points: %d", cvarManager->getCvar("hf_points").getIntValue());
+	ImGui::SetWindowFontScale(2);
 	ImGui::Text("Current winstreak in competitive: %d", cvarManager->getCvar("hf_win_streak").getIntValue());
+	ImGui::Text("Points this session: %d", cvarManager->getCvar("hf_points").getIntValue() - sessionStartPoints);
 	//ImGui::Text("Current points per minute: %d", calculateTimeToWait() == 0 ? 0 : round(60.0 / calculateTimeToWait()));
 	ImGui::End();
 }
