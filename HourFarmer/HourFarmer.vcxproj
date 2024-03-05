@@ -110,6 +110,60 @@
     <ClCompile Include="HourFarmer.cpp" />
     <ClCompile Include="GuiBase.cpp" />
     <ClCompile Include="PersistentStorage.cpp" />
+    <ClCompile Include="RenderingTools\Extra\CanvasExtensions.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="RenderingTools\Extra\RenderingAssistant.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="RenderingTools\Extra\RenderingMath.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="RenderingTools\Extra\WrapperStructsExtensions.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="RenderingTools\Objects\Chevron.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="RenderingTools\Objects\Circle.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="RenderingTools\Objects\Circle2D.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="RenderingTools\Objects\Cone.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="RenderingTools\Objects\Cube.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="RenderingTools\Objects\Cylinder.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="RenderingTools\Objects\Frustum.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="RenderingTools\Objects\Grid.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="RenderingTools\Objects\Line.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="RenderingTools\Objects\Matrix3.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="RenderingTools\Objects\Plane.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="RenderingTools\Objects\Sphere.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="RenderingTools\Objects\Triangle.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="RenderingTools\Objects\VisualCamera.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</ForcedIncludeFiles>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imconfig.h" />
@@ -131,6 +185,25 @@
     <ClInclude Include="GuiBase.h" />
     <ClInclude Include="HourFarmer.h" />
     <ClInclude Include="PersistentStorage.h" />
+    <ClInclude Include="RenderingTools\Extra\CanvasExtensions.h" />
+    <ClInclude Include="RenderingTools\Extra\RenderingAssistant.h" />
+    <ClInclude Include="RenderingTools\Extra\RenderingMath.h" />
+    <ClInclude Include="RenderingTools\Extra\WrapperStructsExtensions.h" />
+    <ClInclude Include="RenderingTools\Objects\Chevron.h" />
+    <ClInclude Include="RenderingTools\Objects\Circle.h" />
+    <ClInclude Include="RenderingTools\Objects\Circle2D.h" />
+    <ClInclude Include="RenderingTools\Objects\Cone.h" />
+    <ClInclude Include="RenderingTools\Objects\Cube.h" />
+    <ClInclude Include="RenderingTools\Objects\Cylinder.h" />
+    <ClInclude Include="RenderingTools\Objects\Frustum.h" />
+    <ClInclude Include="RenderingTools\Objects\Grid.h" />
+    <ClInclude Include="RenderingTools\Objects\Line.h" />
+    <ClInclude Include="RenderingTools\Objects\Matrix3.h" />
+    <ClInclude Include="RenderingTools\Objects\Plane.h" />
+    <ClInclude Include="RenderingTools\Objects\Sphere.h" />
+    <ClInclude Include="RenderingTools\Objects\Triangle.h" />
+    <ClInclude Include="RenderingTools\Objects\VisualCamera.h" />
+    <ClInclude Include="RenderingTools\RenderingTools.h" />
     <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>

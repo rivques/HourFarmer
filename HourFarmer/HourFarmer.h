@@ -42,6 +42,7 @@ class HourFarmer: public BakkesMod::Plugin::BakkesModPlugin
 	void onMatchEnded(ServerWrapper server);
 	void onStatTickerMessage(void* params);
 	void onGoalScored(BallWrapper ball);
+	void drawAccuracyOverlay(CanvasWrapper canvas);
 
 	void renderShopItem(std::string name, std::string description, int cost, std::function<void()> purchaseAction);
 	void renderLimitedPerDayItem(std::string name, std::string description, int maxPurchasesPerDay, CVarWrapper numUsedTodayCvar, std::function<void()> purchaseAction);
@@ -56,7 +57,7 @@ class HourFarmer: public BakkesMod::Plugin::BakkesModPlugin
 	bool didJustWin = false;
 	// state for goal detection
 	bool isInGoalReplay = false;
-
+	bool showAccuracyOverlay = true;
 	// here's some vars for the GUI
 	bool is_showing_overlay = true;
 	bool is_dragging_overlay = false;

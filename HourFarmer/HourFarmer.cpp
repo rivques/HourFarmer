@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "HourFarmer.h"
 
+#include "RenderingTools/RenderingTools.h"
+
 
 BAKKESMOD_PLUGIN(HourFarmer, "HourFarmer", plugin_version, PLUGINTYPE_FREEPLAY)
 
@@ -22,7 +24,7 @@ void HourFarmer::onLoad()
 	CVarWrapper last_reset_time_cvar = persistent_storage->RegisterPersistentCvar("hf_last_reset_time", "0", "The time at which the daily limits were last reset");
 	CVarWrapper win_streak_cvar = persistent_storage->RegisterPersistentCvar("hf_win_streak", "0", "The player's current win streak");
 	CVarWrapper points_goal_weekday_cvar = persistent_storage->RegisterPersistentCvar("hf_points_goal_weekday", "10", "How many points the player will accumulate every time they score a goal on a Wednesday");
-	CVarWrapper quadrant_size_cvar = persistent_storage->RegisterPersistentCvar("hf_quadrant_size", "0.2", "The size of the quadrants for goal accuracy awards");
+	CVarWrapper quadrant_size_cvar = persistent_storage->RegisterPersistentCvar("hf_quadrant_size", "20", "The size of the quadrants for goal accuracy awards");
 
 	// kick off the time-based point awarding
 	timeBasedPointAward();
@@ -133,6 +135,9 @@ void HourFarmer::onLoad()
 			}
 		onGoalScored(caller);
 		});	
+	gameWrapper->RegisterDrawable([this](CanvasWrapper canvas) {
+		drawAccuracyOverlay(canvas);
+		});
 }
 void HourFarmer::onStatTickerMessage(void* params) {
 	StatTickerParams* pStruct = (StatTickerParams*)params;
@@ -157,6 +162,61 @@ void HourFarmer::onGoalScored(BallWrapper ball)
 		return;
 	}
 	CVarWrapper quadrant_size_cvar = cvarManager->getCvar("hf_quadrant_size");
+	if (!quadrant_size_cvar) {
+		LOG("Quadrant size cvar not found!");
+		return;
+	}
+	double quadrant_size_percent = quadrant_size_cvar.getIntValue()/100.0;
+	const double GOAL_HEIGHT = 642;
+	const double GOAL_WIDTH = 892;
+	double goalX = abs(ball.GetLocation().X);
+	double goalZ = abs(ball.GetLocation().Z);
+	if (goalX < 0 || goalX > GOAL_WIDTH || goalZ < 0 || goalZ > GOAL_HEIGHT) {
+		return;
+	}
+	double goalXPercent = goalX / (GOAL_WIDTH);
+	double goalZPercent = goalZ / (GOAL_HEIGHT);
+	DEBUGLOG("Goal scored at x: {} ({}%), z: {} ({}%) (target {}%)", goalX, goalXPercent, goalZ, goalZPercent, quadrant_size_percent);
+	if (goalXPercent > 1 - quadrant_size_percent && (goalZPercent < quadrant_size_percent || goalZPercent > (1 - quadrant_size_percent))) {
+		awardPoints(10, "shot accuracy!", false);
+	}
+}
+
+void HourFarmer::drawAccuracyOverlay(CanvasWrapper canvas)
+{
+	if (!gameWrapper->IsInCustomTraining() || !showAccuracyOverlay) {
+		return;
+	}
+	const float GOAL_HEIGHT = 642;
+	const float GOAL_WIDTH = 892;
+	const float GOAL_X = 0;
+	const float GOAL_Z = GOAL_HEIGHT/2;
+	const float GOAL_Y = 5120;
+
+	CVarWrapper quadrant_size_cvar = cvarManager->getCvar("hf_quadrant_size");
+	if (!quadrant_size_cvar) {
+		LOG("Quadrant size cvar not found!");
+		return;
+	}
+	float quadrant_size_percent = quadrant_size_cvar.getIntValue() / 100.0;
+	float quadrant_size_h = GOAL_HEIGHT * quadrant_size_percent;
+	float quadrant_size_w = GOAL_WIDTH * quadrant_size_percent;
+	auto camera = gameWrapper->GetCamera();
+	if (camera.IsNull()) { LOG("Null camera"); return; }
+	RT::Frustum frust{ canvas, camera };
+
+	// remember that these are the center of the grid, so we need to subtract half the grid width/height
+	Vector topLeft = { GOAL_X - GOAL_WIDTH + quadrant_size_w/2, GOAL_Y, GOAL_Z + GOAL_HEIGHT / 2 -quadrant_size_h/2};
+	Vector topRight = { GOAL_X + GOAL_WIDTH - quadrant_size_w/2, GOAL_Y, GOAL_Z + GOAL_HEIGHT / 2 - quadrant_size_h/2 };
+	Vector bottomLeft = { GOAL_X - GOAL_WIDTH + quadrant_size_w/2, GOAL_Y, GOAL_Z - GOAL_HEIGHT / 2 + quadrant_size_h/2 };
+	Vector bottomRight = { GOAL_X + GOAL_WIDTH - quadrant_size_w/2, GOAL_Y, GOAL_Z - GOAL_HEIGHT / 2 + quadrant_size_h/2 };
+
+	canvas.SetColor(LinearColor{ 0, 255, 0, 255 });
+
+	RT::Grid( topLeft, {0.707,0,0,0.707}, quadrant_size_w,quadrant_size_h, 0, 0 ).Draw(canvas, frust, false);
+	RT::Grid( topRight, {0.707,0,0,0.707}, quadrant_size_w,quadrant_size_h, 0, 0 ).Draw(canvas, frust, false);
+	RT::Grid( bottomLeft, {0.707,0,0,0.707}, quadrant_size_w,quadrant_size_h, 0, 0 ).Draw(canvas, frust, false);
+	RT::Grid( bottomRight, {0.707,0,0,0.707}, quadrant_size_w,quadrant_size_h, 0, 0 ).Draw(canvas, frust, false);
 }
 
 void HourFarmer::awardPoints(int numPoints, std::string reason, bool silent)
@@ -390,6 +450,8 @@ void HourFarmer::RenderSettings()
 	ImGui::SetWindowFontScale(2);
 	ImGui::TextUnformatted("Welcome to the Hour Farmer shop!");
 	ImGui::TextUnformatted("Here you can spend your hard-earned points on various items and upgrades.");
+	ImGui::Separator();
+	ImGui::TextUnformatted("Casual Queues");
 
 	CVarWrapper cduels_num_used_today_cvar = cvarManager->getCvar("hf_num_used_today_casual_duels");
 	if (!cduels_num_used_today_cvar) {
@@ -418,6 +480,8 @@ void HourFarmer::RenderSettings()
 			QueueForMatch(Playlist::CASUAL_STANDARD, PlaylistCategory::CASUAL);
 		});
 	}
+	ImGui::Separator();
+	ImGui::TextUnformatted("Competitive Queues");
 	renderShopItem("Competitive duels", "Queues you for competitive duels", 1000, [this]() {
 		QueueForMatch(Playlist::RANKED_DUELS, PlaylistCategory::RANKED);
 		queueingCancelRefund = 1000;
@@ -430,6 +494,12 @@ void HourFarmer::RenderSettings()
 		QueueForMatch(Playlist::RANKED_STANDARD, PlaylistCategory::RANKED);
 		queueingCancelRefund = 1000;
 	});
+	ImGui::Separator();
+	ImGui::TextUnformatted("Powerups");
+	renderShopItem("Coaching session", "30 mins of coaching", 5000, [this]() {});
+	renderShopItem("Workshop map", "Get a new workshop map", 5000, [this]() {});
+	renderShopItem("Queue with pro", "Add a pro to your party for a queue", 7500, [this]() {});
+
 	ImGui::SetWindowFontScale(1);
 	if (ImGui::CollapsingHeader("Settings", ImGuiTreeNodeFlags_None)) {
 		ImGui::Checkbox("Make overlay draggable", &is_dragging_overlay);
@@ -518,11 +588,12 @@ void HourFarmer::RenderSettings()
 			LOG("Quadrant size cvar not found!");
 		}
 		else {
-			int quadrant_size = quadrant_size_cvar.getFloatValue()*100;
-			if (ImGui::SliderInt("Quadrant bomus target size", &quadrant_size, 0, 100, "%d%%")) {
-				quadrant_size_cvar.setValue(quadrant_size/100);
+			int quadrant_size = quadrant_size_cvar.getIntValue();
+			if (ImGui::SliderInt("Quadrant bonus target size", &quadrant_size, 0, 100, "%d%%")) {
+				quadrant_size_cvar.setValue(quadrant_size);
 			}
 		}
+		ImGui::Checkbox("Show goal accuracy overlay", &showAccuracyOverlay);
 	}
 }
 
@@ -551,8 +622,20 @@ void HourFarmer::RenderWindow()
 	}
 
 	int minPointsToPurchaseSomething = 1000;
+	CVarWrapper points_cvar = cvarManager->getCvar("hf_points");
+	if (!points_cvar) {
+		LOG("Points cvar not found!");
+		return;
+	}
+	if (points_cvar.getIntValue() < minPointsToPurchaseSomething) {
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+	}
+	else {
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+	}
 	ImGui::SetWindowFontScale(2.5);
-	ImGui::Text("Current points: %d", cvarManager->getCvar("hf_points").getIntValue());
+	ImGui::Text("Current points: %d", points_cvar.getIntValue());
+	ImGui::PopStyleColor();
 	ImGui::SetWindowFontScale(2);
 	ImGui::Text("Current winstreak in competitive: %d", cvarManager->getCvar("hf_win_streak").getIntValue());
 	ImGui::Text("Points this session: %d", cvarManager->getCvar("hf_points").getIntValue() - sessionStartPoints);
