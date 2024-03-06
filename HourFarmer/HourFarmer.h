@@ -43,6 +43,7 @@ class HourFarmer: public BakkesMod::Plugin::BakkesModPlugin
 	void onStatTickerMessage(void* params);
 	void onGoalScored(BallWrapper ball);
 	void drawAccuracyOverlay(CanvasWrapper canvas);
+	void onPlayerRemoved();
 
 	void renderShopItem(std::string name, std::string description, int cost, std::function<void()> purchaseAction);
 	void renderLimitedPerDayItem(std::string name, std::string description, int maxPurchasesPerDay, CVarWrapper numUsedTodayCvar, std::function<void()> purchaseAction);

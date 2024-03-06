@@ -1,6 +1,6 @@
 Points over time: done
 Completeing a training pack: need to find event
-Pack quadrants: not yet started
+Pack quadrants: done
 Freeplay time: done
 Weekday modifier: done
 Replay time: done
@@ -11,4 +11,4 @@ Coach session, workshop map, queue with pro: Will need to have CBell do manunall
 Point reimbursement:  
 Game wins: Done, I think  
 Win streaking: Done, I think  
-Leavers: Need to find event  
+Leavers: Need to test

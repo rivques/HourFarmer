@@ -134,7 +134,11 @@ void HourFarmer::onLoad()
 				return;
 			}
 		onGoalScored(caller);
-		});	
+		});
+	gameWrapper->HookEvent("Function TAGame.GFxHUD_Soccar_TA.HandlePlayerRemoved", [this](...){
+		onPlayerRemoved();
+	});
+
 	gameWrapper->RegisterDrawable([this](CanvasWrapper canvas) {
 		drawAccuracyOverlay(canvas);
 		});
@@ -179,6 +183,23 @@ void HourFarmer::onGoalScored(BallWrapper ball)
 	DEBUGLOG("Goal scored at x: {} ({}%), z: {} ({}%) (target {}%)", goalX, goalXPercent, goalZ, goalZPercent, quadrant_size_percent);
 	if (goalXPercent > 1 - quadrant_size_percent && (goalZPercent < quadrant_size_percent || goalZPercent > (1 - quadrant_size_percent))) {
 		awardPoints(10, "shot accuracy!", false);
+	}
+}
+
+void HourFarmer::onPlayerRemoved(){
+	ServerWrapper sw = gameWrapper->GetCurrentGameState();
+	if (!sw) {
+		LOG("Server was null in onPlayerRemoved");
+		return;
+	}
+	if(!sw.ShouldHaveLeaveMatchPenalty()){
+		DEBUGLOG("A player left the match, but no penalty should be applied")
+		return;
+	}
+	if(sw.GetGameTimeRemaining() > 210 && sw.GetbOverTime() == 0){
+		awardPoints(900, "teammate abandoning!", false);
+	} else {
+		awardPoints(100, "teammate abandoning!", false);
 	}
 }
 
