@@ -193,7 +193,7 @@ void HourFarmer::onPlayerRemoved(){
 		return;
 	}
 	if(!sw.ShouldHaveLeaveMatchPenalty()){
-		DEBUGLOG("A player left the match, but no penalty should be applied")
+		DEBUGLOG("A player left the match, but no penalty should be applied");
 		return;
 	}
 	if(sw.GetGameTimeRemaining() > 210 && sw.GetbOverTime() == 0){
