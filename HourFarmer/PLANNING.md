@@ -6,7 +6,7 @@ Weekday modifier: done
 Replay time: done
 
 Restricted ranked queuing: done, I think  
-Coach session, workshop map, queue with pro: Will need to have CBell do manunally (still need to add buttons)  
+Coach session, workshop map, queue with pro: Will need to have CBell do manunally (added buttons)
 
 Point reimbursement:  
 Game wins: Done, I think  

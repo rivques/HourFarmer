@@ -44,6 +44,8 @@ class HourFarmer: public BakkesMod::Plugin::BakkesModPlugin
 	void onGoalScored(BallWrapper ball);
 	void drawAccuracyOverlay(CanvasWrapper canvas);
 	void onPlayerRemoved();
+	void onTrainingEnd();
+	void onTrainingStart();
 
 	void renderShopItem(std::string name, std::string description, int cost, std::function<void()> purchaseAction);
 	void renderLimitedPerDayItem(std::string name, std::string description, int maxPurchasesPerDay, CVarWrapper numUsedTodayCvar, std::function<void()> purchaseAction);
@@ -62,6 +64,7 @@ class HourFarmer: public BakkesMod::Plugin::BakkesModPlugin
 	// here's some vars for the GUI
 	bool is_showing_overlay = true;
 	bool is_dragging_overlay = false;
+	std::chrono::time_point<std::chrono::steady_clock> lastEventRoundFinished;
 public:
 	void RenderSettings() override; // Uncomment if you wanna render your own tab in the settings menu
 	void RenderWindow() override; // Uncomment if you want to render your own plugin window

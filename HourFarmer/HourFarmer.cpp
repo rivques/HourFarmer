@@ -42,10 +42,10 @@ void HourFarmer::onLoad()
 	}, 0.1);
 
 	// hook training completion
-	gameWrapper->HookEventWithCaller<ActorWrapper>("Function TAGame.GameEvent_TrainingEditor_TA.GetScore", [this](ActorWrapper caller, void* params, std::string eventName) {
-		AGameEvent_TrainingEditor_TA_GetScore_Params* scoreParams = reinterpret_cast<AGameEvent_TrainingEditor_TA_GetScore_Params*>(params);
-		DEBUGLOG("Training completed with score " + std::to_string(scoreParams->ReturnValue));
-		});
+	//gameWrapper->HookEventWithCaller<ActorWrapper>("Function TAGame.GameEvent_TrainingEditor_TA.GetScore", [this](ActorWrapper caller, void* params, std::string eventName) {
+	//	AGameEvent_TrainingEditor_TA_GetScore_Params* scoreParams = reinterpret_cast<AGameEvent_TrainingEditor_TA_GetScore_Params*>(params);
+	//	DEBUGLOG("Training completed with score " + std::to_string(scoreParams->ReturnValue));
+	//	});
 	// hook trying to queue
 	gameWrapper->HookEvent("Function TAGame.GFxData_Matchmaking_TA.StartMatchmaking", [this](...) {
 		if (queueingIsAllowed) {
@@ -142,6 +142,18 @@ void HourFarmer::onLoad()
 	gameWrapper->RegisterDrawable([this](CanvasWrapper canvas) {
 		drawAccuracyOverlay(canvas);
 		});
+	gameWrapper->HookEvent("Function TAGame.GameEvent_TrainingEditor_TA.EventRoundFinished", [this](...) {
+		lastEventRoundFinished = std::chrono::steady_clock::now();
+		});
+	gameWrapper->HookEvent("Function TAGame.GameEvent_TrainingEditor_TA.EndTraining", [this](...) {
+		auto now = std::chrono::steady_clock::now();
+		if ((now - lastEventRoundFinished) < std::chrono::milliseconds(500)) {
+			onTrainingEnd();
+		}
+		else {
+			DEBUGLOG("Training ended, but not <500ms after eventroundfinish");
+		}
+		});
 }
 void HourFarmer::onStatTickerMessage(void* params) {
 	StatTickerParams* pStruct = (StatTickerParams*)params;
@@ -200,6 +212,19 @@ void HourFarmer::onPlayerRemoved(){
 		awardPoints(900, "teammate abandoning!", false);
 	} else {
 		awardPoints(100, "teammate abandoning!", false);
+	}
+}
+
+void HourFarmer::onTrainingEnd()
+{
+	auto gtd = gameWrapper->GetGfxTrainingData();
+	if (!gtd) {
+		LOG("Training wrapper was null in onTrainingEnd");
+		return;
+	}
+	DEBUGLOG("Training ended with score {}, total rounds {}", gtd.GetCurrentScore(), gtd.GetTotalRounds());
+	if (gtd.GetCurrentScore() == gtd.GetTotalRounds()) {
+		awardPoints(30, "100%%ing training!", false);
 	}
 }
 
