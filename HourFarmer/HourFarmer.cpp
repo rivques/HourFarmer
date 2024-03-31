@@ -94,6 +94,7 @@ void HourFarmer::onLoad()
 			}
 			win_streak_cvar.setValue(0);
 		}
+		queueingIsAllowed = false;
 		didJustWin = false;
 		gamePlayedWasCompetitive = false;
 		});
@@ -202,6 +203,10 @@ void HourFarmer::onPlayerRemoved(){
 	ServerWrapper sw = gameWrapper->GetCurrentGameState();
 	if (!sw) {
 		LOG("Server was null in onPlayerRemoved");
+		return;
+	}
+	if (gameWrapper->IsInReplay()) {
+		DEBUGLOG("A player left the match, but we're in a replay");
 		return;
 	}
 	if(!sw.ShouldHaveLeaveMatchPenalty()){
@@ -390,6 +395,7 @@ void HourFarmer::onMatchEnded(ServerWrapper server)
 		LOG("Server was null in onMatchEnded");
 		return;
 	}
+	queueingIsAllowed = false;
 	// make sure we're in competitive
 	GameSettingPlaylistWrapper playlist = server.GetPlaylist();
 	if (!playlist) {
