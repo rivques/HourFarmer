@@ -25,6 +25,7 @@ void HourFarmer::onLoad()
 	CVarWrapper win_streak_cvar = persistent_storage->RegisterPersistentCvar("hf_win_streak", "0", "The player's current win streak");
 	CVarWrapper points_goal_weekday_cvar = persistent_storage->RegisterPersistentCvar("hf_points_goal_weekday", "10", "How many points the player will accumulate every time they score a goal on a Wednesday");
 	CVarWrapper quadrant_size_cvar = persistent_storage->RegisterPersistentCvar("hf_quadrant_size", "20", "The size of the quadrants for goal accuracy awards");
+	CVarWrapper doublexpweekendss_active_cvar = persistent_storage->RegisterPersistentCvar("hf_doublexpweekends_active", "1", "Whether double XP weekends are active");
 
 	// kick off the time-based point awarding
 	timeBasedPointAward();
@@ -342,6 +343,15 @@ float HourFarmer::calculateTimeToWait()
 		}
 		result = 60.0 / points_per_min_replay_cvar.getFloatValue();
 	}
+	// double xp weekends
+	CVarWrapper doublexpweekends_active_cvar = cvarManager->getCvar("hf_doublexpweekends_active");
+	if (!doublexpweekends_active_cvar) {
+		LOG("Double XP weekends active cvar not found!");
+		return result;
+	}
+	if (!doublexpweekends_active_cvar.getBoolValue()) {
+		return result;
+	}
 	std::time_t t = std::time(nullptr);
 	std::tm* now = std::localtime(&t);
 	if (now->tm_wday == 6 || now->tm_wday == 0) {
@@ -649,6 +659,17 @@ void HourFarmer::RenderSettings()
 			}
 		}
 		ImGui::Checkbox("Show goal accuracy overlay", &showAccuracyOverlay);
+		// double xp weekends
+		CVarWrapper doublexpweekends_active_cvar = cvarManager->getCvar("hf_doublexpweekends_active");
+		if (!doublexpweekends_active_cvar) {
+			LOG("Double XP weekends active cvar not found!");
+		}
+		else {
+			bool doublexpweekends_active = doublexpweekends_active_cvar.getBoolValue();
+			if (ImGui::Checkbox("Double XP weekends active", &doublexpweekends_active)) {
+				doublexpweekends_active_cvar.setValue(doublexpweekends_active);
+			}
+		}
 	}
 }
 
