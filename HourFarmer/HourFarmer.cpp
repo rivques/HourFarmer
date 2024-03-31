@@ -534,9 +534,12 @@ void HourFarmer::RenderSettings()
 	}
 	ImGui::Separator();
 	ImGui::TextUnformatted("Competitive Queues");
-	renderShopItem("Competitive duels", "Queues you for competitive duels", 1000, [this]() {
+	std::time_t t = std::time(nullptr);
+	std::tm* now = std::localtime(&t);
+	bool isMonday = now->tm_wday == 1;
+	renderShopItem("Competitive duels", (isMonday ? "(free on Monday!)" : "Queues you for competitive duels"), isMonday ? 0 : 1000, [this, isMonday]() {
 		QueueForMatch(Playlist::RANKED_DUELS, PlaylistCategory::RANKED);
-		queueingCancelRefund = 1000;
+		queueingCancelRefund = (isMonday ? 0 : 1000);
 	});
 	renderShopItem("Competitive doubles", "Queues you for competitive doubles", 1000, [this]() {
 		QueueForMatch(Playlist::RANKED_DOUBLES, PlaylistCategory::RANKED);
