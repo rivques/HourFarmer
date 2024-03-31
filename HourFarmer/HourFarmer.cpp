@@ -3,6 +3,7 @@
 
 #include "RenderingTools/RenderingTools.h"
 
+#define TOAST_SCALE 1.0f
 
 BAKKESMOD_PLUGIN(HourFarmer, "HourFarmer", plugin_version, PLUGINTYPE_FREEPLAY)
 
@@ -76,7 +77,7 @@ void HourFarmer::onLoad()
 		}
 		points_cvar.setValue(points_cvar.getIntValue() + queueingCancelRefund);
 		if (queueingCancelRefund > 0) {
-			gameWrapper->Toast("Queue cancelled", "You've been refunded " + std::to_string(queueingCancelRefund) + " points for cancelling the queue", "default", 3.5, ToastType_OK);
+			gameWrapper->Toast("Queue cancelled", "You've been refunded " + std::to_string(queueingCancelRefund) + " points for cancelling the queue", "default", 3.5, ToastType_OK, 290.0f*TOAST_SCALE, 60.0f*TOAST_SCALE);
 		}
 		queueingCancelRefund = 0;
 		});
@@ -280,7 +281,7 @@ void HourFarmer::awardPoints(int numPoints, std::string reason, bool silent)
 	}
 	points_cvar.setValue(points_cvar.getIntValue() + numPoints);
 	if (!silent) {
-		gameWrapper->Toast("Points awarded!", "You've been awarded " + std::to_string(numPoints) + " points for " + reason, "default", 3.5, ToastType_OK);
+		gameWrapper->Toast("Points awarded!", "You've been awarded " + std::to_string(numPoints) + " points for " + reason, "default", 3.5, ToastType_OK, 290.0f * TOAST_SCALE, 60.0f * TOAST_SCALE);
 	}
 	DEBUGLOG("Awarded " + std::to_string(numPoints) + " points for " + reason + (silent ? ", silently" : ", loudly") );
 }
@@ -395,7 +396,7 @@ void HourFarmer::ResetDailyLimits() {
 		}
 		cvar.setValue(0);
 	}
-	gameWrapper->Toast("Daily limits reset!", "Your daily Hour Farmer limits have been reset", "default", 3.5, ToastType_OK);
+	gameWrapper->Toast("Daily limits reset!", "Your daily Hour Farmer limits have been reset", "default", 3.5, ToastType_OK, 290.0f * TOAST_SCALE, 60.0f * TOAST_SCALE);
 }
 
 void HourFarmer::onMatchEnded(ServerWrapper server)
@@ -475,12 +476,12 @@ void HourFarmer::renderShopItem(std::string name, std::string description, int c
 
 	if (ImGui::Button((name + " (" + std::to_string(cost) + " points)").c_str())) {
 		if (points < cost) {
-			gameWrapper->Toast("Not enough points!", "You don't have enough points to purchase " + name, "default", 3.5, ToastType_Error);
+			gameWrapper->Toast("Not enough points!", "You don't have enough points to purchase " + name, "default", 3.5, ToastType_Error, 290.0f * TOAST_SCALE, 60.0f * TOAST_SCALE);
 			return;
 		}
 		else {
 			points_cvar.setValue(points - cost);
-			gameWrapper->Toast("Purchased!", "You've purchased " + name + " for " + std::to_string(cost) + " points", "default", 3.5, ToastType_OK);
+			gameWrapper->Toast("Purchased!", "You've purchased " + name + " for " + std::to_string(cost) + " points", "default", 3.5, ToastType_OK, 290.0f * TOAST_SCALE, 60.0f * TOAST_SCALE);
 			purchaseAction();
 		}
 	}
@@ -492,12 +493,12 @@ void HourFarmer::renderLimitedPerDayItem(std::string name, std::string descripti
 {
 	if (ImGui::Button((name + " (" + std::to_string(maxPurchasesPerDay - numUsedTodayCvar.getIntValue()) + " left)").c_str())) {
 		if (numUsedTodayCvar.getIntValue() >= maxPurchasesPerDay) {
-			gameWrapper->Toast("Out of stock!", "You've already purchased " + name + " the maximum number of times today", "default", 3.5, ToastType_Error);
+			gameWrapper->Toast("Out of stock!", "You've already purchased " + name + " the maximum number of times today", "default", 3.5, ToastType_Error, 290.0f * TOAST_SCALE, 60.0f * TOAST_SCALE);
 			return;
 		}
 		else {
 			numUsedTodayCvar.setValue(numUsedTodayCvar.getIntValue() + 1);
-			gameWrapper->Toast("Purchased!", "You've purchased " + name + "! You have " + std::to_string(maxPurchasesPerDay - numUsedTodayCvar.getIntValue()) + " left today.", "default", 3.5, ToastType_OK);
+			gameWrapper->Toast("Purchased!", "You've purchased " + name + "! You have " + std::to_string(maxPurchasesPerDay - numUsedTodayCvar.getIntValue()) + " left today.", "default", 3.5, ToastType_OK, 290.0f * TOAST_SCALE, 60.0f * TOAST_SCALE);
 			purchaseAction();
 		}
 	}
