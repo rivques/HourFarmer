@@ -442,7 +442,7 @@ void HourFarmer::onMatchEnded(ServerWrapper server)
 		int win_streak = win_streak_cvar.getIntValue();
 		awardPoints(250, "winning a ranked match!", false);
 		if (win_streak >= 3) {
-			awardPoints(50, "win streak bonus!", false);
+			awardPoints(500, "win streak bonus!", false);
 		}
 		win_streak_cvar.setValue(win_streak + 1);
 	}
