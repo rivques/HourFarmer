@@ -452,7 +452,7 @@ void HourFarmer::onMatchEnded(ServerWrapper server)
 		// we won
 		int win_streak = win_streak_cvar.getIntValue();
 		awardPoints(250, "winning a ranked match!", false);
-		if (win_streak >= 3) {
+		if (win_streak >= 2) { // starts at 3 because incr is after this
 			awardPoints(500, "win streak bonus!", false);
 		}
 		win_streak_cvar.setValue(win_streak + 1);
@@ -678,6 +678,11 @@ void HourFarmer::QueueForMatch(Playlist playlist, PlaylistCategory playlistCateg
 	queueingIsAllowed = true;
 	gameWrapper->Execute([this, playlist, playlistCategory](GameWrapper* gw) {
 		MatchmakingWrapper matchmaker = gameWrapper->GetMatchmakingWrapper();
+		Playlist playlistsToClear[] = {Playlist::CASUAL_DUELS, Playlist::CASUAL_DOUBLES, Playlist::CASUAL_STANDARD, Playlist::CASUAL_CHAOS, Playlist::RANKED_DUELS, Playlist::RANKED_DOUBLES, Playlist::RANKED_STANDARD, Playlist::AUTO_TOURNAMENT, Playlist:: EXTRAS_DROPSHOT, Playlist::EXTRAS_HOOPS, Playlist::EXTRAS_RUMBLE, Playlist::EXTRAS_SNOWDAY};
+		for (auto playlistToClear : playlistsToClear) {
+			matchmaker.SetPlaylistSelection(playlistToClear, 0);
+		}
+
 		matchmaker.SetPlaylistSelection(playlist, 1);
 		matchmaker.StartMatchmaking(playlistCategory);
 		});
